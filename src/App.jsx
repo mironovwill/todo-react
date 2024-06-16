@@ -1,35 +1,37 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { Button, Container, Stack, Form, Card } from 'react-bootstrap';
+import { Container, Stack } from 'react-bootstrap';
+import { Card } from './components/Card/Card.jsx';
+import { Form } from './components/Form/Form.jsx';
 
 function App() {
-  const [taskList, setTaskList] = useState([
-    {
-      id: uuidv4(),
-      text: 'task'
-    }
-  ]);
+  const [taskList, setTaskList] = useState(JSON.parse(localStorage.getItem('tasks')) || []);
 
   const [task, setTask] = useState('');
+
+  useEffect(() => {
+    localStorage.setItem('tasks', JSON.stringify(taskList));
+  }, [taskList]);
 
   const renderTasks = () =>
     taskList.map((item) => {
       return (
-        <Card key={item.id}>
-          <Stack>
-            <Card.Body className="d-flex justify-content-between align-items-center">
-              {item.text}
-              <Button variant="danger" onClick={() => deleteTask(item.id)}>
-                Delete
-              </Button>
-            </Card.Body>
-          </Stack>
-        </Card>
+        <Card
+          id={item.id}
+          text={item.text}
+          completed={item.completed}
+          key={item.id}
+          deleteTask={deleteTask}
+          completeTask={completeTask}
+        />
       );
     });
 
   const addTask = (task) => {
-    setTaskList((prevTaskList) => [...prevTaskList, { id: uuidv4(), text: task }]);
+    setTaskList((prevTaskList) => [
+      ...prevTaskList,
+      { id: uuidv4(), text: task, completed: false }
+    ]);
     setTask('');
   };
 
@@ -37,21 +39,22 @@ function App() {
     setTaskList((prevTaskList) => prevTaskList.filter((item) => item.id !== id));
   };
 
+  const completeTask = (id) => {
+    setTaskList((prevTaskList) => {
+      return prevTaskList.map((item) => {
+        if (item.id === id) {
+          return { ...item, completed: true };
+        }
+        return item;
+      });
+    });
+  };
+
   return (
     <Container className="mt-2 mb-5">
-      <Stack gap={3} className="col-md-5 mx-auto">
+      <Stack gap={3} className="col-md-7 mx-auto">
         <h1>Todo App</h1>
-        <Form>
-          <Form.Group className="mb-3">
-            <Form.Label>Add task:</Form.Label>
-            <Form.Control
-              placeholder="Enter task name"
-              value={task}
-              onChange={(e) => setTask(e.target.value)}
-            />
-          </Form.Group>
-          <Button onClick={() => addTask(task)}>Submit</Button>
-        </Form>
+        <Form addTask={addTask} setTask={setTask} task={task} />
         <Stack gap={3}>{renderTasks()}</Stack>
       </Stack>
     </Container>
