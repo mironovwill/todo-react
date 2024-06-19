@@ -5,12 +5,24 @@ import { Card } from './components/Card/Card.jsx';
 import { Form } from './components/Form/Form.jsx';
 
 function App() {
-  const [taskList, setTaskList] = useState(JSON.parse(localStorage.getItem('tasks')) || []);
+  const [taskList, setTaskList] = useState(() => {
+    try {
+      const tasks = localStorage.getItem('tasks');
+      return JSON.parse(tasks) || [];
+    } catch (e) {
+      console.log(e);
+      return [];
+    }
+  });
 
   const [task, setTask] = useState('');
 
   useEffect(() => {
-    localStorage.setItem('tasks', JSON.stringify(taskList));
+    try {
+      localStorage.setItem('tasks', JSON.stringify(taskList));
+    } catch (e) {
+      console.log(e);
+    }
   }, [taskList]);
 
   const renderTasks = () =>
